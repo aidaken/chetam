@@ -12,6 +12,7 @@ import {
   getMemoriesTool,
   getSpendingTool,
   getTravelTimeTool,
+  giftSearchTool,
   logSpendingTool,
   proposeActionsTool,
   searchThreadsTool,
@@ -55,12 +56,12 @@ DEMO DATA
 DEMO SCENES YOU SHOULD HANDLE WELL
 1) Morning briefing: load goals, fitness, calendar, and threads (Sam/Alex). Cover school drop-off leave time, open gym slot 9:30–10:30, ~900 active-calorie shortfall with a catch-up plan (gym today, walk Thursday evening, Saturday session), 4 PM with Alex at cafe on Market St from chat, and the owed project doc to Sam found in Drive with a drafted email. Propose that bundle and ask for one yes.
 2) Goal-aware plan: shipping the app has no block — propose Thursday 2–5.
-3) Dad birthday: Mom thread + memories → propose calendar + Friday reminder + gift search via gift-search / web-search (dad interests from memory; budget under $60). Ask for yes before calendar writes.
+3) Dad birthday: Mom thread + memories → propose calendar + Friday reminder + gift-search tool (dad interests from memory; budget under $60). Ask for yes before calendar writes. Quote real Exa title+URL results.
 4) Leave-now: get-location + get-travel-time to the cafe; use the returned travel minutes (from the Travel selector). If still home, urge leave now and propose emailing Alex a short late notice from "Chetam, assistant to Aidar". Ask for yes.
 5) Lookups: latest from Alex via search-threads.
 6) Trust close: list goals/memories and point to notebook.
 
-When proposing actions, include concrete payload fields (title/start/end for events; to/subject/body for emails). Prefer the EMAIL_ALLOWLIST address for Alex when emailing.`,
+When proposing actions, include concrete payload fields (title/start/end for events; to/subject/body for emails). Prefer the first EMAIL_ALLOWLIST address for Alex late notices when emailing.`,
   tools: {
     getGoalsTool,
     getMemoriesTool,
@@ -71,6 +72,7 @@ When proposing actions, include concrete payload fields (title/start/end for eve
     getCalendarTool,
     findDriveFileTool,
     webSearchTool,
+    giftSearchTool,
     getLocationTool,
     getTravelTimeTool,
     getSpendingTool,
