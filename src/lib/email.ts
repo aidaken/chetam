@@ -37,12 +37,14 @@ export async function getOrCreateChetamInbox() {
   }
   const client = getClient();
   const username = process.env.AGENTMAIL_INBOX_USERNAME || "chetam";
+  // AgentMail rejects commas in displayName (validation_error on display_name).
+  // TODO(verify): product wants "Chetam, assistant to Aidar" — using dash until allowed.
+  const displayName = "Chetam - assistant to Aidar";
+
   try {
-    // AgentMail rejects commas in displayName (validation_error on display_name).
-    // TODO(verify): product wants "Chetam, assistant to Aidar" — using dash until allowed.
     const inbox = await client.inboxes.create({
       username,
-      displayName: "Chetam - assistant to Aidar",
+      displayName,
       clientId: INBOX_CLIENT_ID,
     });
     cachedInboxId = inbox.inboxId;
@@ -52,11 +54,60 @@ export async function getOrCreateChetamInbox() {
       displayName: inbox.displayName,
     };
   } catch (error) {
+    const body =
+      error && typeof error === "object" && "body" in error
+        ? (error as { body?: { code?: string } }).body
+        : undefined;
+    const code = body?.code;
     console.error("[agentmail] inboxes.create failed", {
       message: error instanceof Error ? error.message : String(error),
-      // TODO(verify): AgentMailError.statusCode / body shape
+      code,
       raw: error,
     });
+
+    // Username may already exist from a prior run; clientId idempotency did not return it.
+    // TODO(verify): whether clientId alone is enough when username collides across retries.
+    if (code === "already_exists" || /already exists/i.test(String(error))) {
+      const guessedId = `${username}@agentmail.to`;
+      try {
+        const existing = await client.inboxes.get(guessedId);
+        cachedInboxId = existing.inboxId;
+        try {
+          await client.inboxes.update(existing.inboxId, { displayName });
+        } catch (updateErr) {
+          console.warn("[agentmail] displayName update skipped", {
+            message:
+              updateErr instanceof Error ? updateErr.message : String(updateErr),
+          });
+        }
+        return {
+          inboxId: existing.inboxId,
+          email: existing.email,
+          displayName: existing.displayName ?? displayName,
+        };
+      } catch (getErr) {
+        const listed = await client.inboxes.list({ limit: 50 });
+        const match = (listed.inboxes ?? []).find(
+          (i) =>
+            i.clientId === INBOX_CLIENT_ID ||
+            i.inboxId === guessedId ||
+            i.email === guessedId ||
+            i.email?.startsWith(`${username}@`),
+        );
+        if (match) {
+          cachedInboxId = match.inboxId;
+          return {
+            inboxId: match.inboxId,
+            email: match.email,
+            displayName: match.displayName ?? displayName,
+          };
+        }
+        console.error("[agentmail] lookup after already_exists failed", {
+          get: getErr instanceof Error ? getErr.message : String(getErr),
+          listedCount: listed.count ?? listed.inboxes?.length,
+        });
+      }
+    }
     throw error;
   }
 }

@@ -19,10 +19,10 @@ async function leaveNowPrompt() {
     .map((s) => s.trim())
     .filter(Boolean)[0];
   return `[SYSTEM TRIGGER: leave-now ~3:00 PM] Aidar is still at ${state.location}.
-Call get-location and get-travel-time to the cafe on Market St. Travel toggle currently says ${mins} minutes — use that value in your message.
+Call get-location and get-travel-time to the cafe on Market St. Travel toggle currently says ${mins} minutes — use that exact number in your message.
 Tell him to leave now to arrive around the right time for his 4 PM with Alex.
-Offer to email Alex that he may be a few minutes late from "Chetam, assistant to Aidar"${allow ? ` (to: ${allow})` : ""}.
-Propose the email via propose-actions and ask for yes. Do not send until approved.`;
+In the SAME turn, call propose-actions with one send_email action: late notice from "Chetam, assistant to Aidar"${allow ? ` to ${allow}` : ""}, subject like "Running a few minutes late", short body.
+Then text a 1–2 line summary that includes the ${mins} minute travel time and ask for yes/send. Do not wait for a second confirmation before proposing.`;
 }
 
 const TRIGGERS: Record<
@@ -36,8 +36,10 @@ const TRIGGERS: Record<
   },
   birthday: {
     prompt: `[SYSTEM TRIGGER] Mom reminded Aidar about Dad's birthday Saturday.
-Use search-threads (Mom), get-memories, and gift-search for niche gifts under $60 (vintage radio restoration + chili growing). Prefer specialty product pages.
-Propose: add birthday to calendar, Friday evening reminder, and save gift ideas. Ask for yes before writes. Include real title+URL from gift-search.`,
+REQUIRED tool calls in order: search-threads("Mom"), get-memories, gift-search.
+After gift-search returns, your reply MUST include at least 2 real title + URL lines from the tool results (no placeholders).
+Then call propose-actions for: add birthday to calendar Saturday, Friday evening reminder, save gift ideas.
+Ask for one yes. Do not invent links.`,
   },
   leavenow: { prompt: leaveNowPrompt },
   trust: {
