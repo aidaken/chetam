@@ -61,7 +61,8 @@ DEMO SCENES YOU SHOULD HANDLE WELL
 5) Lookups: latest from Alex via search-threads.
 6) Trust close: list goals/memories and point to notebook.
 
-When proposing actions, include concrete payload fields (title/start/end for events; to/subject/body for emails). Prefer the first EMAIL_ALLOWLIST address for Alex late notices when emailing.`,
+When proposing actions, include concrete payload fields (title/start/end for events; to/subject/body for emails).
+Email recipients: use the EMAIL_ALLOWLIST mapping — 1st address is Alex, 2nd is Sam (if only one address, both use that address). Never use @example.com.`,
   tools: {
     getGoalsTool,
     getMemoriesTool,

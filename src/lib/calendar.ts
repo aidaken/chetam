@@ -3,6 +3,8 @@
  * Seeded impl now; swap to Executor via CALENDAR_PROVIDER=executor later.
  */
 
+import { getAlexEmail } from "@/lib/recipients";
+
 export type CalendarEvent = {
   id: string;
   title: string;
@@ -26,46 +28,52 @@ export interface CalendarProvider {
   }): Promise<{ mode: "seeded" | "live"; event: CalendarEvent }>;
 }
 
-const seededEvents: CalendarEvent[] = [
-  {
-    id: "cal-dropoff",
-    title: "School drop-off",
-    start: "today 08:15",
-    end: "today 08:35",
-    location: "Lincoln Elementary",
-  },
-  {
-    id: "cal-open",
-    title: "Free slot",
-    start: "today 09:30",
-    end: "today 10:30",
-  },
-  {
-    id: "cal-alex",
-    title: "Meet Alex",
-    start: "today 16:00",
-    end: "today 17:00",
-    location: "Cafe on Market St",
-    attendees: ["alex@example.com"],
-  },
-  {
-    id: "cal-standup",
-    title: "Team standup",
-    start: "today 11:00",
-    end: "today 11:20",
-  },
-];
+function baseSeededEvents(): CalendarEvent[] {
+  const alex = getAlexEmail();
+  return [
+    {
+      id: "cal-dropoff",
+      title: "School drop-off",
+      start: "today 08:15",
+      end: "today 08:35",
+      location: "Lincoln Elementary",
+    },
+    {
+      id: "cal-open",
+      title: "Free slot",
+      start: "today 09:30",
+      end: "today 10:30",
+    },
+    {
+      id: "cal-alex",
+      title: "Meet Alex",
+      start: "today 16:00",
+      end: "today 17:00",
+      location: "Cafe on Market St",
+      attendees: alex ? [alex] : [],
+    },
+    {
+      id: "cal-standup",
+      title: "Team standup",
+      start: "today 11:00",
+      end: "today 11:20",
+    },
+  ];
+}
 
 /** In-memory events created during this process (demo). */
 const created: CalendarEvent[] = [];
 
+export function resetSeededCalendar() {
+  created.length = 0;
+}
+
 class SeededCalendarProvider implements CalendarProvider {
   async getCalendar(range = "today") {
-    const events = [...seededEvents, ...created];
     return {
       mode: "seeded" as const,
       range,
-      events,
+      events: [...baseSeededEvents(), ...created],
     };
   }
 
@@ -86,7 +94,7 @@ class SeededCalendarProvider implements CalendarProvider {
 
 class ExecutorCalendarProvider implements CalendarProvider {
   // TODO(verify): Executor Google Calendar tool paths — not built yet
-  async getCalendar(range = "today") {
+  async getCalendar() {
     throw new Error(
       "CALENDAR_PROVIDER=executor is not implemented yet; use seeded",
     );

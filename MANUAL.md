@@ -45,10 +45,32 @@ bun run dev
 5. Set Travel to **65 min** → **Leave now** → `yes` — late email to allowlisted address.
 6. Open **/notebook** — goals, memories (Forget), nudges, action log with reasons.
 
+## Email allowlist mapping
+
+`EMAIL_ALLOWLIST` is comma-separated. Order matters:
+
+| Position | Role | Used for |
+| --- | --- | --- |
+| 1st | **Alex** | Leave-now late notice; calendar attendee |
+| 2nd | **Sam** | Morning briefing project-doc email |
+
+If only one address is set, both Alex and Sam use that address (allowlist guard still applies).
+
+Example:
+```
+EMAIL_ALLOWLIST=alex-test@yourmail.com,sam-test@yourmail.com
+```
+
+Current single-address setups work: both roles email `kenzhedar@gmail.com` (or whatever your first entry is).
+
 ## Safety
 
 - Emails send only after approval **and** `EMAIL_ENABLED=true` **and** recipient ∈ `EMAIL_ALLOWLIST`.
 - Otherwise the send is logged as would-have-sent (no secrets in logs).
+
+## Demo reset
+
+Use **Reset demo** in the chat UI (or `POST /api/demo/reset`) between takes. It clears pending approvals + action log, re-seeds memory/goals/threads/fitness, resets travel to 55, and clears the chat thread. Each scene button also expires older pending approvals so `yes` only applies to the scene just shown.
 
 ## Manual / on-site
 

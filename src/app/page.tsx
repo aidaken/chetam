@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 type Msg = {
   id: string;
   role: "user" | "assistant";
   text: string;
+};
+
+type Pending = {
+  id: string | null;
+  summary: string | null;
+  count: number;
 };
 
 const QUICK = [
@@ -21,7 +27,26 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [travel, setTravel] = useState(55);
+  const [pending, setPending] = useState<Pending>({
+    id: null,
+    summary: null,
+    count: 0,
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const refreshPending = useCallback(async () => {
+    try {
+      const res = await fetch("/api/demo/pending");
+      const data = await res.json();
+      setPending({
+        id: data.id ?? null,
+        summary: data.summary ?? null,
+        count: Number(data.count ?? 0),
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,7 +57,8 @@ export default function ChatPage() {
       .then((r) => r.json())
       .then((d) => setTravel(Number(d.travel_minutes ?? 55)))
       .catch(() => undefined);
-  }, []);
+    void refreshPending();
+  }, [refreshPending]);
 
   async function sendText(text: string) {
     const trimmed = text.trim();
@@ -62,6 +88,7 @@ export default function ChatPage() {
           text: data.text || "Something went quiet on my end.",
         },
       ]);
+      await refreshPending();
     } catch {
       setMessages((m) => [
         ...m,
@@ -94,6 +121,15 @@ export default function ChatPage() {
           text: data.text || "Trigger returned empty.",
         },
       ]);
+      if (data.pending) {
+        setPending({
+          id: data.pending.id ?? null,
+          summary: data.pending.summary ?? null,
+          count: Number(data.pending.count ?? 0),
+        });
+      } else {
+        await refreshPending();
+      }
     } catch {
       setMessages((m) => [
         ...m,
@@ -103,6 +139,22 @@ export default function ChatPage() {
           text: "Trigger failed.",
         },
       ]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resetDemo() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fetch("/api/demo/reset", { method: "POST" });
+      setMessages([]);
+      setTravel(55);
+      setPending({ id: null, summary: null, count: 0 });
+      setInput("");
+    } catch {
+      /* ignore */
     } finally {
       setBusy(false);
     }
@@ -137,12 +189,22 @@ export default function ChatPage() {
             follow-through after you say yes.
           </p>
         </div>
-        <Link
-          href="/notebook"
-          className="shrink-0 rounded-full border border-ink/15 bg-foam px-4 py-2 text-sm font-medium text-ink transition hover:border-sea hover:text-sea-deep"
-        >
-          Notebook
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void resetDemo()}
+            className="rounded-full border border-ink/15 bg-foam px-4 py-2 text-sm font-medium text-ink transition hover:border-sea hover:text-sea-deep disabled:opacity-50"
+          >
+            Reset demo
+          </button>
+          <Link
+            href="/notebook"
+            className="rounded-full border border-ink/15 bg-foam px-4 py-2 text-sm font-medium text-ink transition hover:border-sea hover:text-sea-deep"
+          >
+            Notebook
+          </Link>
+        </div>
       </header>
 
       <div className="mb-3 flex flex-wrap gap-2">
@@ -169,6 +231,12 @@ export default function ChatPage() {
           </select>
         </label>
       </div>
+
+      {pending.summary && (
+        <p className="mb-3 text-xs text-ink/60">
+          pending: {pending.summary}
+        </p>
+      )}
 
       <section className="relative flex min-h-[62vh] flex-1 flex-col overflow-hidden rounded-[28px] border border-ink/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(247,250,247,0.9))] shadow-[0_30px_80px_rgba(20,32,28,0.08)]">
         <div className="flex items-center gap-3 border-b border-ink/8 px-5 py-3">
