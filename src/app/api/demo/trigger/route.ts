@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { getDemoState } from "@/lib/data";
+import { mastra } from "@/mastra";
+
+export const maxDuration = 90;
+
+async function morningPrompt() {
+  return `[SYSTEM TRIGGER: morning briefing 7:30 AM] Proactively text Aidar a morning briefing now.
+Use tools: get-goals, get-fitness-progress, get-calendar, search-threads for Sam and Alex, find-drive-file for the project doc.
+Cover all of: school drop-off (~leave by 7:55), open gym slot 9:30–10:30, weekly active calories shortfall (~900 if ~1100 of 2000) with a catch-up plan (gym today, 30-min walk Thursday evening, Saturday morning session), 4 PM with Alex at the cafe on Market St from chat, and the owed project doc to Sam (found in Drive) with a drafted email.
+Propose ONE approval bundle for the calendar blocks + email to Sam + leave reminder. Ask for one yes. Keep it concise but complete.`;
+}
+
+async function leaveNowPrompt() {
+  const state = await getDemoState();
+  const mins = Number(state.travel_minutes ?? 55);
+  const allow = (process.env.EMAIL_ALLOWLIST ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)[0];
+  return `[SYSTEM TRIGGER: leave-now ~3:00 PM] Aidar is still at ${state.location}.
+Call get-location and get-travel-time to the cafe on Market St. Travel toggle currently says ${mins} minutes — use that value in your message.
+Tell him to leave now to arrive around the right time for his 4 PM with Alex.
+Offer to email Alex that he may be a few minutes late from "Chetam, assistant to Aidar"${allow ? ` (to: ${allow})` : ""}.
+Propose the email via propose-actions and ask for yes. Do not send until approved.`;
+}
+
+const TRIGGERS: Record<
+  string,
+  { prompt: () => Promise<string> | string }
+> = {
+  morning: { prompt: morningPrompt },
+  goalblock: {
+    prompt:
+      "[SYSTEM TRIGGER] Shipping the app is the priority but nothing is blocked for it this week on the calendar. Propose blocking Thursday 2 to 5 for the app via propose-actions. Ask for yes.",
+  },
+  birthday: {
+    prompt: `[SYSTEM TRIGGER] Mom reminded Aidar about Dad's birthday Saturday.
+Use search-threads (Mom), get-memories, and gift-search for niche gifts under $60 (vintage radio restoration + chili growing). Prefer specialty product pages.
+Propose: add birthday to calendar, Friday evening reminder, and save gift ideas. Ask for yes before writes. Include real title+URL from gift-search.`,
+  },
+  leavenow: { prompt: leaveNowPrompt },
+  trust: {
+    prompt:
+      "[SYSTEM TRIGGER] User asked what you know about them. Summarize goals, key commitments, and point to the notebook. Keep it to two short lines.",
+  },
+};
+
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const scene = String(body.scene ?? "morning");
+  const trigger = TRIGGERS[scene];
+  if (!trigger) {
+    return NextResponse.json(
+      { error: `Unknown scene. Use: ${Object.keys(TRIGGERS).join(", ")}` },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const prompt =
+      typeof trigger.prompt === "function"
+        ? await trigger.prompt()
+        : trigger.prompt;
+    const agent = mastra.getAgentById("chetam-agent");
+    const result = await agent.generate(prompt, { maxSteps: 16 });
+    return NextResponse.json({ scene, text: result.text });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Trigger failed";
+    console.error("[api/demo/trigger]", message);
+    return NextResponse.json(
+      {
+        scene,
+        error: message,
+        text: "Model unavailable — check /api/health and MANUAL.md.",
+      },
+      { status: 502 },
+    );
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ scenes: Object.keys(TRIGGERS) });
+}
