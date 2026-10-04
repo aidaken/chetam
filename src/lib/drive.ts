@@ -32,7 +32,9 @@ class SeededDriveProvider implements DriveProvider {
 
 class ExecutorDriveProvider implements DriveProvider {
   // TODO(verify): Executor Google Drive tool paths — not built yet
-  async findDriveFile() {
+  async findDriveFile(
+    _query: string,
+  ): Promise<{ mode: "seeded" | "live"; file: DriveFile | null }> {
     throw new Error(
       "DRIVE_PROVIDER=executor is not implemented yet; use seeded",
     );

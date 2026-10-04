@@ -38,7 +38,7 @@ Then text a 1–2 line summary that includes the ${mins} minute travel time and 
 
 const TRIGGERS: Record<
   string,
-  { prompt: () => Promise<string> | string }
+  { prompt: string | (() => Promise<string> | string) }
 > = {
   morning: { prompt: morningPrompt },
   goalblock: {

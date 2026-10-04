@@ -94,12 +94,21 @@ class SeededCalendarProvider implements CalendarProvider {
 
 class ExecutorCalendarProvider implements CalendarProvider {
   // TODO(verify): Executor Google Calendar tool paths — not built yet
-  async getCalendar() {
+  async getCalendar(range = "today"): Promise<{
+    mode: "seeded" | "live";
+    events: CalendarEvent[];
+    range: string;
+  }> {
     throw new Error(
       "CALENDAR_PROVIDER=executor is not implemented yet; use seeded",
     );
   }
-  async createEvent() {
+  async createEvent(input: {
+    title: string;
+    start: string;
+    end: string;
+    location?: string;
+  }): Promise<{ mode: "seeded" | "live"; event: CalendarEvent }> {
     throw new Error(
       "CALENDAR_PROVIDER=executor is not implemented yet; use seeded",
     );

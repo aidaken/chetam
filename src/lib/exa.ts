@@ -49,7 +49,9 @@ export async function searchDadGifts(options?: {
       .join(" ");
 
   const exa = new Exa(apiKey);
-  let raw: Awaited<ReturnType<Exa["search"]>>;
+  let raw: {
+    results?: Array<{ title?: string | null; url: string }>;
+  };
   try {
     raw = await exa.search(query, {
       type: "auto",
