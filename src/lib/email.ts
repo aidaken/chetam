@@ -38,9 +38,11 @@ export async function getOrCreateChetamInbox() {
   const client = getClient();
   const username = process.env.AGENTMAIL_INBOX_USERNAME || "chetam";
   try {
+    // AgentMail rejects commas in displayName (validation_error on display_name).
+    // TODO(verify): product wants "Chetam, assistant to Aidar" — using dash until allowed.
     const inbox = await client.inboxes.create({
       username,
-      displayName: "Chetam, assistant to Aidar",
+      displayName: "Chetam - assistant to Aidar",
       clientId: INBOX_CLIENT_ID,
     });
     cachedInboxId = inbox.inboxId;
