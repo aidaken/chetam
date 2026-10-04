@@ -1,26 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #14201c;
+  --paper: #f3f1ea;
+  --paper-2: #e8ebe4;
+  --mist: #d5ddd4;
+  --sea: #1f6f63;
+  --sea-deep: #134e48;
+  --foam: #f7faf7;
+  --line: rgba(20, 32, 28, 0.12);
+  --bubble-you: #1f6f63;
+  --bubble-me: #ffffff;
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-mist: var(--mist);
+  --color-sea: var(--sea);
+  --color-sea-deep: var(--sea-deep);
+  --color-foam: var(--foam);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #dfe9e2 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #e7ebe1 0%, transparent 50%),
+    linear-gradient(180deg, #f6f4ee 0%, #ece8df 100%);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
 }
