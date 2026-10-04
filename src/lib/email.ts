@@ -18,7 +18,7 @@ function getAllowlist(): string[] {
 }
 
 export function isEmailEnabled() {
-  return process.env.EMAIL_ENABLED === "true";
+  return process.env.EMAIL_ENABLED?.trim() === "true";
 }
 
 export function isRecipientAllowed(to: string) {
@@ -36,7 +36,7 @@ export async function getOrCreateChetamInbox() {
     return { inboxId: cachedInboxId };
   }
   const client = getClient();
-  const username = process.env.AGENTMAIL_INBOX_USERNAME || "chetam";
+  const username = (process.env.AGENTMAIL_INBOX_USERNAME || "chetam").trim();
   // AgentMail rejects commas in displayName (validation_error on display_name).
   // TODO(verify): product wants "Chetam, assistant to Aidar" — using dash until allowed.
   const displayName = "Chetam - assistant to Aidar";

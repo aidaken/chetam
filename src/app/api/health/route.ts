@@ -26,8 +26,8 @@ export async function GET() {
     {
       ok,
       checks,
-      model: process.env.LLM_MODEL || "gpt-5-mini",
-      emailEnabled: process.env.EMAIL_ENABLED === "true",
+      model: process.env.LLM_MODEL?.trim() || "gpt-5-mini",
+      emailEnabled: process.env.EMAIL_ENABLED?.trim() === "true",
       // never include secrets
     },
     { status: ok ? 200 : 503 },

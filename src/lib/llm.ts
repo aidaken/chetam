@@ -2,8 +2,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import OpenAI from "openai";
 
 function requireGatewayEnv() {
-  const token = process.env.NEON_AI_GATEWAY_TOKEN;
-  const base = process.env.NEON_AI_GATEWAY_BASE_URL;
+  const token = process.env.NEON_AI_GATEWAY_TOKEN?.trim();
+  const base = process.env.NEON_AI_GATEWAY_BASE_URL?.trim();
   if (!token || !base) {
     throw new Error(
       "NEON_AI_GATEWAY_TOKEN and NEON_AI_GATEWAY_BASE_URL are required",
